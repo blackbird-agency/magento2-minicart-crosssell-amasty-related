@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="minicart_crosssell" translate="label" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Cross-sell Minicart</label>
+            <tab>blackbird_extensions</tab>
+            <resource>Blackbird_MinicartCrosssell::config</resource>
+            <group id="general" translate="label comment" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General</label>
+                <field id="minicart_crosssell_enable" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Cross-sell Enable</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="minicart_crosssell_title" type="text" translate="label" sortOrder="10" showInDefault="1"
+                       showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Title of minicart cross-sell section</label>
+                </field>
+                <field id="minicart_crosssell_display" type="text" translate="label" sortOrder="10" showInDefault="1"
+                       showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Max number of product in Cross-sell minicart</label>
+                    <comment>Set the max number of product displayed in Minicart cross-sell carrousel</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

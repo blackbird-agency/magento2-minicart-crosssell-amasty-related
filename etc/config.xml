@@ -1,0 +1,11 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <minicart_crosssell>
+            <general>
+                <minicart_crosssell_enable>yes</minicart_crosssell_enable>
+                <minicart_crosssell_title>Vous aimerez aussi...</minicart_crosssell_title>
+                <minicart_crosssell_display>3</minicart_crosssell_display>
+            </general>
+        </minicart_crosssell>
+    </default>
+</config>
