@@ -8,7 +8,7 @@
     "amasty/mostviewed": "^2.15"
   },
   "license": [
-    "Proprietary"
+    "OSL-3.0"
   ],
   "autoload": {
     "files": [
