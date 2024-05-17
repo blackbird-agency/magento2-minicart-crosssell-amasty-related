@@ -15,9 +15,15 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Blackbird\MinicartCrosssell\Api\AttributeValidatorInterface;
 use Blackbird\MinicartCrosssell\Service\CrossSellRetriever;
 use Blackbird\MinicartCrosssell\Model\Config;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\View\Element\Template;
 
 class AddCrosssellDataToCartData
 {
+
+    const MEDIA_PATH = 'media/catalog/product';
+    const TEMPLATE = 'Blackbird_MinicartCrosssell::addToCart.phtml';
+
     /**
      * @param CrossSellRetriever                $crossSellRetriever
      * @param Session                           $checkoutSession
@@ -27,7 +33,9 @@ class AddCrosssellDataToCartData
      * @param AttributeResource                 $attributeResource
      * @param Configurable                      $configurable
      * @param Config                            $config
-     * @param AttributeValidatorInterface[]     $attributeValidators
+     * @param StoreManagerInterface             $storeManager
+     * @param Template                          $template
+     * @param array                             $attributeValidators
      */
     public function __construct
     (
@@ -39,6 +47,8 @@ class AddCrosssellDataToCartData
         protected AttributeResource $attributeResource,
         protected Configurable $configurable,
         protected Config $config,
+        protected StoreManagerInterface $storeManager,
+        protected Template $template,
         protected array $attributeValidators = []
     ) {
     }
@@ -94,7 +104,9 @@ class AddCrosssellDataToCartData
                         ->formatPrice($crosssellProduct->getData('price')),
                     'price' =>       $this->checkoutHelper
                         ->formatPrice($crosssellProduct->getData('final_price')),
-                    'image' =>       $crosssellProduct->getData('thumbnail'),
+                    'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
+                    'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
+                    'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable)
                 ];
             }
 
@@ -107,10 +119,9 @@ class AddCrosssellDataToCartData
 
     /**
      * @param Product $configurable
+     * @param string  $simpleSku
      *
      * @return array
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     public function getCrosssellSimpleProductOption(Product $configurable, string $simpleSku):array
     {
@@ -146,6 +157,10 @@ class AddCrosssellDataToCartData
         return $crosssellProductOption;
     }
 
+    /**
+     * @param $simpleProduct
+     * @return Product|null
+     */
     public function getConfigurableProductFromSimple($simpleProduct): ?Product
     {
         try {
@@ -162,5 +177,66 @@ class AddCrosssellDataToCartData
         } catch (NoSuchEntityException $e) {
             return null;
         }
+    }
+
+    /**
+     * @param $simpleProduct
+     * @return array
+     */
+    public function getConfigurableProductData($simpleProduct):array
+    {
+        try {
+            $parentIds = $this->configurable->getParentIdsByChild($simpleProduct->getId());
+            if (!empty($parentIds)) {
+                $configurableProduct = $this->productRepository->getById($parentIds[0]);
+                $superAttributes = [];
+                foreach ($configurableProduct->getTypeInstance()->getConfigurableAttributes($configurableProduct) as $attribute) {
+                    $attributeId = $attribute->getProductAttribute()->getId();
+                    $superAttributes[$attributeId] = $simpleProduct->getData($attribute->getProductAttribute()->getAttributeCode());
+                }
+                return $superAttributes;
+            }
+        } catch (\Exception $e) {
+            return ['error' => $e->getMessage()];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param $crosssellProduct
+     * @param $configurableProduct
+     *
+     * @return string
+     * @throws LocalizedException
+     */
+    public function getAddToCartButtonHtml($crosssellProduct, $configurableProduct): string
+    {
+
+        $configurableProductData = $this->getConfigurableProductData($crosssellProduct);
+        $options = $configurableProductData;
+
+
+        $formKey = $this->template->getLayout()
+                                  ->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
+
+        return $this->template->getLayout()->createBlock(Template::class)
+                              ->setTemplate(self::TEMPLATE)
+                              ->setData([
+                                            'configurableProductId' => $configurableProduct->getId(),
+                                            'options' => $options,
+                                            'addToCartUrl' => $this->template->getUrl('checkout/cart/add'),
+                                            'formKey' => $formKey,
+                                        ])->toHtml();
+    }
+
+    /**
+     * @param $fileName
+     *
+     * @return string
+     */
+    public function getThumbnailUrl($fileName):string
+    {
+        return $this->template->getBaseUrl() . self::MEDIA_PATH . $fileName;
     }
 }

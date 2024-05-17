@@ -1,0 +1,16 @@
+<?php
+/**
+ * @var $block Magento\Framework\View\Element\Template
+ */
+?>
+
+<form action="<?= $block->getData('addToCartUrl') ?>" method="post">
+    <input type="hidden" name="product" value="<?= $block->getData('configurableProductId') ?>" />
+    <input type="hidden" name="form_key" value="<?= $block->getData('formKey') ?>" />
+    <input type="hidden" name="qty" value="1" />
+    <?php foreach ($block->getData('options') as $attributeId => $valueIndex): ?>
+        <input type="hidden" name="super_attribute[<?= $attributeId; ?>]" value="<?= $valueIndex; ?>" />
+    <?php endforeach; ?>
+
+    <button type="submit">Add to Cart</button>
+</form>
