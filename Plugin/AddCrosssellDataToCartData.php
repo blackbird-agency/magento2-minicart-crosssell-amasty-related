@@ -2,7 +2,6 @@
 
 namespace Blackbird\MinicartCrosssell\Plugin;
 
-use Bultex\Theme\Api\Service\ProductAttributeProviderInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ResourceModel\Eav\Attribute as AttributeResource;
@@ -13,10 +12,12 @@ use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Blackbird\MinicartCrosssell\Api\AttributeValidatorInterface;
-use Blackbird\MinicartCrosssell\Service\CrossSellRetriever;
+use Blackbird\MinicartCrosssell\Service\CrosssellRetriever;
 use Blackbird\MinicartCrosssell\Model\Config;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\View\Element\Template;
+use PHPUnit\Exception;
+use Psr\Log\LoggerInterface;
 
 class AddCrosssellDataToCartData
 {
@@ -25,30 +26,30 @@ class AddCrosssellDataToCartData
     const TEMPLATE = 'Blackbird_MinicartCrosssell::addToCart.phtml';
 
     /**
-     * @param CrossSellRetriever                $crossSellRetriever
-     * @param Session                           $checkoutSession
-     * @param CheckoutHelper                    $checkoutHelper
-     * @param ProductRepositoryInterface        $productRepository
-     * @param ProductAttributeProviderInterface $productAttributeProvider
-     * @param AttributeResource                 $attributeResource
-     * @param Configurable                      $configurable
-     * @param Config                            $config
-     * @param StoreManagerInterface             $storeManager
-     * @param Template                          $template
-     * @param array                             $attributeValidators
+     * @param CrosssellRetriever         $crossSellRetriever
+     * @param Session                    $checkoutSession
+     * @param CheckoutHelper             $checkoutHelper
+     * @param ProductRepositoryInterface $productRepository
+     * @param AttributeResource          $attributeResource
+     * @param Configurable               $configurable
+     * @param Config                     $config
+     * @param StoreManagerInterface      $storeManager
+     * @param Template                   $template
+     * @param LoggerInterface            $logger
+     * @param array                      $attributeValidators
      */
     public function __construct
     (
-        protected CrossSellRetriever $crossSellRetriever,
+        protected CrosssellRetriever $crossSellRetriever,
         protected Session $checkoutSession,
         protected CheckoutHelper $checkoutHelper,
         protected ProductRepositoryInterface $productRepository,
-        protected ProductAttributeProviderInterface $productAttributeProvider,
         protected AttributeResource $attributeResource,
         protected Configurable $configurable,
         protected Config $config,
         protected StoreManagerInterface $storeManager,
         protected Template $template,
+        protected LoggerInterface $logger,
         protected array $attributeValidators = []
     ) {
     }
@@ -63,13 +64,16 @@ class AddCrosssellDataToCartData
     {
         try {
             $result['related_items'] = [
-                'items' => $this->getCrossSellProductData(),
-                'title' => $this->config->getMinicartCrosssellTitle(),
-                'max_product' =>$this->config->getMaxNumberProductToDisplay()
+                'items'       => $this->getCrossSellProductData(),
+                'title'       => $this->config->getMinicartCrosssellTitle(),
+                'max_product' => $this->config->getMaxNumberProductToDisplay()
             ];
+
             return $result;
-        } catch (LocalizedException $e) {
-            return $result;
+        }
+        catch (\Exception $e) {
+                $this->logger->error($e);
+                return [];
         }
     }
 
@@ -83,38 +87,43 @@ class AddCrosssellDataToCartData
             return [];
         }
 
-        try {
-            $crosssellProductsArray = $this->crossSellRetriever->getCrossSells();
 
-            $crosssellProducts = [];
+        $crosssellProductsArray = $this->crossSellRetriever->getCrossSells();
 
-            foreach ($crosssellProductsArray as $crosssellProduct) {
+        $crosssellProducts = [];
 
-                $configurable = $this->getConfigurableProductFromSimple($crosssellProduct);
-
-                $familyName = $this->productAttributeProvider->getFamilleAttributeBySku(
-                    $configurable->getSku()) ?? '';
-
-                $crosssellProducts[] = [
-                    'name' =>        $crosssellProduct->getData('name'),
-                    'option' =>      $this->getCrosssellSimpleProductOption($configurable, $crosssellProduct->getSku()),
-                    'category' =>    $familyName,
-                    'description' => $crosssellProduct->getData('description_vignette'),
-                    'old_price' =>   $this->checkoutHelper
-                        ->formatPrice($crosssellProduct->getData('price')),
-                    'price' =>       $this->checkoutHelper
-                        ->formatPrice($crosssellProduct->getData('final_price')),
-                    'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
-                    'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
-                    'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable)
-                ];
-            }
-
-            return $crosssellProducts;
+        foreach ($crosssellProductsArray as $crosssellProduct) {
+            $crosssellProducts[] = $this->getProductData($crosssellProduct);
         }
-        catch (NoSuchEntityException $e) {
-            return [];
+
+        return $crosssellProducts;
+    }
+
+    /**
+     * @throws LocalizedException
+     */
+    public function getProductData(Product $crosssellProduct): array
+    {
+        $configurable = $this->getConfigurableProductFromSimple($crosssellProduct);
+
+
+        $options = [];
+        if(isset($configurable)) {
+            $options =  $this->getCrosssellSimpleProductOption($configurable, $crosssellProduct->getSku());
         }
+
+        return [
+            'name' =>        $crosssellProduct->getData('name'),
+            'option' =>      $options,
+            'description' => $crosssellProduct->getData('description_vignette'),
+            'old_price' =>   $this->checkoutHelper
+                ->formatPrice($crosssellProduct->getData('price')),
+            'price' =>       $this->checkoutHelper
+                ->formatPrice($crosssellProduct->getData('final_price')),
+            'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
+            'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
+            'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable)
+        ];
     }
 
     /**

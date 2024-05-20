@@ -6,7 +6,7 @@
                 type="Blackbird\MinicartCrosssell\Plugin\AddMinicartBlockPosition"/>
     </type>
     <type name="Magento\Checkout\CustomerData\Cart">
-        <plugin name="CustomerDataPlugins"
+        <plugin name="add_crosssell_datas_cart_datas"
                 type="Blackbird\MinicartCrosssell\Plugin\AddCrosssellDataToCartData"/>
     </type>
 </config>

@@ -25,7 +25,7 @@ use Blackbird\MinicartCrosssell\Api\Enum\BlockPosition;
 use Blackbird\MinicartCrosssell\Api\Enum\CrosssellProduct;
 use Blackbird\MinicartCrosssell\Model\Config;
 
-class CrossSellRetriever
+class CrosssellRetriever
 {
     /**
      * @param GroupRepositoryInterface $groupRepositoryInterface
