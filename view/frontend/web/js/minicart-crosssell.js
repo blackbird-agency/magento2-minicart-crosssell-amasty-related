@@ -83,6 +83,9 @@ define([
             return htmlOptions;
         },
 
+        /**
+         * Init cross-sell Carrousel
+         */
         initCarrousel:function() {
             const _self = this;
 
@@ -113,6 +116,18 @@ define([
                         ]
                     }).show();
                 })
+        },
+
+        /**
+         *
+         * @param price
+         * @param oldPrice
+         * @returns {number}
+         */
+        getDiscountAmount: function(price, oldPrice) {
+
+            let discount = ((oldPrice - price) / oldPrice) * 100;
+            return Math.floor(discount);
         }
     });
 });
