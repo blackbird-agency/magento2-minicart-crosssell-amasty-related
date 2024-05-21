@@ -2,7 +2,7 @@
     <default>
         <minicart_crosssell>
             <general>
-                <minicart_crosssell_enable>yes</minicart_crosssell_enable>
+                <minicart_crosssell_enable>1</minicart_crosssell_enable>
                 <minicart_crosssell_title>Vous aimerez aussi...</minicart_crosssell_title>
                 <minicart_crosssell_display>3</minicart_crosssell_display>
             </general>

@@ -1,38 +1,6 @@
-<!-- ko if: (relatedItems()) -->
-<div class="minicart-crosssell-container">
+<div class="minicart-crosssell-container" data-bind="if: areRelatedItems()">
     <h3 class="minicart-crosssell-title" text="getCrosssellTitle()"></h3>
     <div class="minicart-crosssell-carrousel">
-        <ul id="minicart-crosssell-items" class="minicart-crosssell-items"
-            data-bind="foreach: { data: relatedItems(), as: 'item' }, afterRender: initCarrousel()">
-            <li class="minicart-crosssell-item">
-                <div class="minicart-crosssell-item-image">
-                    <!-- ko if: (item.price !== item.old_price) -->
-                    <div class="discount-banner">
-                        <span text="$parent.getDiscountAmount(item.price, item.old_price)"></span>
-                    </div>
-                    <!-- /ko -->
-                    <img data-bind="attr: {src: item.image, alt: item.name}" />
-                </div>
-                <div class="minicart-crosssell-item-details">
-                    <h5 data-bind="html: item.name, style: { '--var-color': item.color !== '#FFFFFF' ? item.color : '#000000' }"></h5>
-                    <p class="minicart-crosssell-item-description" text="item.description"></p>
-                    <div class="minicart-crosssell-item-options mobile" html="$parent.getOptionValue(item)"></div>
-                    <div class="minicart-crosssell-item-details-price">
-                        <span class="final-price" html="item.price_html"></span>
-                        <!-- ko if: (item.price !== item.old_price) -->
-                        <span class="old-price" html="item.old_price_html"></span>
-                        <!-- /ko -->
-                    </div>
-                    <div class="minicart-crosssell-item-details-bottom">
-                        <div class="minicart-crosssell-item-options desktop"
-                             data-bind="html:$parent.getOptionValue(item), style: { '--var-color': item.color !== '#FFFFFF' ? item.color : '#000000' }"></div>
-                        <div html="item.button" class="addtocart-button"
-                             data-bind="style: { '--var-color': item.color !== '#FFFFFF' ? item.color : '#000000' }">
-                        </div>
-                    </div>
-                </div>
-            </li>
-        </ul>
+        <each args="getRegion('crosssell-items')" render="{name: getTemplate()}"></each>
     </div>
 </div>
-<!--/ko-->

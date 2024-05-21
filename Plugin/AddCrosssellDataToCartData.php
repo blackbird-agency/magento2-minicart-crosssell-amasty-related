@@ -116,10 +116,12 @@ class AddCrosssellDataToCartData
             'name' =>        $crosssellProduct->getData('name'),
             'option' =>      $options,
             'description' => $crosssellProduct->getData('description_vignette'),
-            'old_price' =>   $this->checkoutHelper
+            'old_price_html' =>   $this->checkoutHelper
                 ->formatPrice($crosssellProduct->getData('price')),
-            'price' =>       $this->checkoutHelper
+            'old_price' =>   $crosssellProduct->getData('price'),
+            'price_html' =>       $this->checkoutHelper
                 ->formatPrice($crosssellProduct->getData('final_price')),
+            'price' =>       $crosssellProduct->getData('final_price'),
             'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
             'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
             'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable)
@@ -230,13 +232,13 @@ class AddCrosssellDataToCartData
                                   ->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
 
         return $this->template->getLayout()->createBlock(Template::class)
-                              ->setTemplate(self::TEMPLATE)
-                              ->setData([
-                                            'configurableProductId' => $configurableProduct->getId(),
-                                            'options' => $options,
-                                            'addToCartUrl' => $this->template->getUrl('checkout/cart/add'),
-                                            'formKey' => $formKey,
-                                        ])->toHtml();
+              ->setTemplate(self::TEMPLATE)
+              ->setData([
+                    'configurableProductId' => $configurableProduct->getId(),
+                    'options' => $options,
+                    'addToCartUrl' => $this->template->getUrl('checkout/cart/add'),
+                    'formKey' => $formKey,
+                ])->toHtml();
     }
 
     /**

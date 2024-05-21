@@ -24,6 +24,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Blackbird\MinicartCrosssell\Api\Enum\BlockPosition;
 use Blackbird\MinicartCrosssell\Api\Enum\CrosssellProduct;
 use Blackbird\MinicartCrosssell\Model\Config;
+use Magento\Quote\Model\ResourceModel\Quote\Item\CollectionFactory as QuoteItemCollectionFactory;
 
 class CrosssellRetriever
 {
@@ -48,6 +49,7 @@ class CrosssellRetriever
         protected Stock $stockHelper,
         protected Wrapper $wrapper,
         protected Config $config,
+        protected QuoteItemCollectionFactory $quoteItemCollectionFactory,
     ) {
     }
 
@@ -133,8 +135,10 @@ class CrosssellRetriever
     public function getLastAddedProductInCart(string $type): ?Product
     {
         try {
-            $collection = (array) $this->session->getQuote()->getItemsCollection()
-                                                ->addOrder('created_at', 'desc')->getItems();
+            $quote = $this->session->getQuote();
+            $collection = $this->quoteItemCollectionFactory->create();
+            $collection->setQuote($quote);
+            $collection->addOrder('created_at', 'DESC')->getItems();
 
             foreach ($collection as $item) {
                 if(($type === CrosssellProduct::PRODUCT_TYPE_CONFIGURABLE->value) && $item->getParentItemId() === null) {
