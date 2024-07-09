@@ -19,8 +19,13 @@ define([
             slickInitialized: '.slick-initialized',
         },
 
+        classes: {
+            mobileHidden: 'mobile-hidden'
+        },
+
         events: {
-            clickOnCartButton: 'click.cartButton'
+            clickOnCartButton: 'click.cartButton',
+            ajaxCrosssellUpdate: 'ajax:minicartCrossellUpdated'
         },
 
         data: {
@@ -33,9 +38,16 @@ define([
             this._super();
             const _self = this;
 
+            $(document).off(_self.events.ajaxCrosssellUpdate)
+                .on(_self.events.ajaxCrosssellUpdate, function () {
+                    _self.resetCrosssellCarrousel();
+                    _self.initCarrousel();
+                });
+
             _self.updateRelatedItems();
             customerData.get('cart').subscribe(function() {
                 _self.updateRelatedItems(customerData.get('cart')().related_items.items);
+
             });
         },
 
@@ -71,6 +83,7 @@ define([
                 _self.relatedItems.removeAll();
                 _self.relatedItems(_self.previousRelatedItems());
             }
+            $(document).trigger(_self.events.ajaxCrosssellUpdate);
         },
 
         /**
@@ -111,31 +124,41 @@ define([
 
             let minicartCrosssellCarrousel = $('.minicart-crosssell-items');
 
-            _self.components.cartButton.off(_self.events.clickOnCartButton)
-                .on(_self.events.clickOnCartButton, function() {
-                    minicartCrosssellCarrousel.not(_self.selectors.slickInitialized).slick({
-                        accessibility: true,
-                        dots: false,
-                        autoplay: false,
-                        arrows: false,
-                        vertical: true,
-                        verticalSwiping: true,
-                        slidesToShow: _self.data.numberSlidesTabletDesktop,
-                        slidesToScroll: _self.data.numberSlidesMobile,
-                        responsive: [
-                            {
-                                breakpoint: 1024,
-                                settings: {
-                                    vertical: false,
-                                    slidesToShow: _self.data.numberSlidesMobile,
-                                    slidesToScroll: _self.data.numberSlidesMobile,
-                                    dots: true,
-                                    arrows: false,
-                                }
-                            }
-                        ]
-                    }).show();
-                })
+            minicartCrosssellCarrousel.not(_self.selectors.slickInitialized).slick({
+                accessibility: true,
+                dots: false,
+                autoplay: false,
+                arrows: false,
+                vertical: true,
+                verticalSwiping: true,
+                slidesToShow: _self.data.numberSlidesTabletDesktop,
+                slidesToScroll: _self.data.numberSlidesMobile,
+                responsive: [
+                    {
+                        breakpoint: 1024,
+                        settings: {
+                            vertical: false,
+                            slidesToShow: _self.data.numberSlidesMobile,
+                            slidesToScroll: _self.data.numberSlidesMobile,
+                            dots: true,
+                            arrows: false,
+                        }
+                    }
+                ]
+            }).show();
+            minicartCrosssellCarrousel.removeClass(_self.classes.mobileHidden);
         },
+
+        /**
+         * Reset Carrousel
+         */
+        resetCrosssellCarrousel: function() {
+
+            let minicartCrosssell = $('.minicart-crosssell-items');
+
+            minicartCrosssell.addClass(_self.classes.mobileHidden);
+            minicartCrosssell.empty();
+            minicartCrosssell.slick('unslick');
+        }
     });
 });
