@@ -154,6 +154,8 @@ define([
          */
         resetCrosssellCarrousel: function() {
 
+            const _self = this;
+
             let minicartCrosssell = $('.minicart-crosssell-items');
 
             minicartCrosssell.addClass(_self.classes.mobileHidden);
