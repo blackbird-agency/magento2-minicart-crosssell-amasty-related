@@ -13,6 +13,7 @@ define([
 
         components: {
             cartButton: $('.action.showcart'),
+            minicart: $('.block-minicart'),
         },
 
         selectors: {
@@ -21,6 +22,10 @@ define([
 
         classes: {
             mobileHidden: 'mobile-hidden'
+        },
+
+        states: {
+            visible: ':visible',
         },
 
         events: {
@@ -43,6 +48,17 @@ define([
                     _self.resetCrosssellCarrousel();
                     _self.initCarrousel();
                 });
+
+            $(_self.components.cartButton).off(_self.events.clickOnCartButton)
+                .on(_self.events.clickOnCartButton, function() {
+                    _self.resetCrosssellCarrousel();
+                    const intervalInitCarrouselMobile = setInterval(function() {
+                        if(_self.components.minicart.is(_self.states.visible)) {
+                            _self.initCarrousel();
+                            clearInterval(intervalInitCarrouselMobile);
+                        }
+                    },1000);
+                })
 
             _self.updateRelatedItems();
             customerData.get('cart').subscribe(function() {
