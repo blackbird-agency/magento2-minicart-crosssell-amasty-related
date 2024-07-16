@@ -52,12 +52,13 @@ define([
             $(_self.components.cartButton).off(_self.events.clickOnCartButton)
                 .on(_self.events.clickOnCartButton, function() {
                     _self.resetCrosssellCarrousel();
+                    $('.minicart-crosssell-items').hide();
                     const intervalInitCarrouselMobile = setInterval(function() {
                         if(_self.components.minicart.is(_self.states.visible)) {
                             _self.initCarrousel();
                             clearInterval(intervalInitCarrouselMobile);
                         }
-                    },1000);
+                    },500);
                 })
 
             _self.updateRelatedItems();
@@ -163,6 +164,7 @@ define([
                 ]
             }).show();
             minicartCrosssellCarrousel.removeClass(_self.classes.mobileHidden);
+            minicartCrosssellCarrousel.show();
         },
 
         /**
