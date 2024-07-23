@@ -52,13 +52,12 @@ define([
             $(_self.components.cartButton).off(_self.events.clickOnCartButton)
                 .on(_self.events.clickOnCartButton, function() {
                     _self.resetCrosssellCarrousel();
-                    $('.minicart-crosssell-items').hide();
                     const intervalInitCarrouselMobile = setInterval(function() {
                         if(_self.components.minicart.is(_self.states.visible)) {
                             _self.initCarrousel();
                             clearInterval(intervalInitCarrouselMobile);
                         }
-                    },500);
+                    },1000);
                 })
 
             _self.updateRelatedItems();
@@ -147,16 +146,18 @@ define([
                 autoplay: false,
                 arrows: false,
                 vertical: true,
+                swipe: true,
                 verticalSwiping: true,
+                touchThreshold: 10,
                 slidesToShow: _self.data.numberSlidesTabletDesktop,
-                slidesToScroll: _self.data.numberSlidesMobile,
                 responsive: [
                     {
                         breakpoint: 1024,
                         settings: {
+                            swipe: true,
+                            touchThreshold: 20,
                             vertical: false,
                             slidesToShow: _self.data.numberSlidesMobile,
-                            slidesToScroll: _self.data.numberSlidesMobile,
                             dots: true,
                             arrows: false,
                         }
@@ -164,7 +165,6 @@ define([
                 ]
             }).show();
             minicartCrosssellCarrousel.removeClass(_self.classes.mobileHidden);
-            minicartCrosssellCarrousel.show();
         },
 
         /**
