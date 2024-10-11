@@ -238,7 +238,7 @@ class CrosssellRetriever
         }
 
         if ($sortAttr === null) {
-            $collection->getSelect()->order('RAND()');
+            $collection->getSelect()->orderRand()->limit(3);
         } else {
             $collection->setOrder($sortAttr, $dir);
         }

@@ -72,8 +72,8 @@ class AddCrosssellDataToCartData
             return $result;
         }
         catch (\Exception $e) {
-                $this->logger->error($e);
-                return [];
+            $this->logger->error($e);
+            return [];
         }
     }
 
@@ -87,9 +87,7 @@ class AddCrosssellDataToCartData
             return [];
         }
 
-
         $crosssellProductsArray = $this->crossSellRetriever->getCrossSells();
-
         $crosssellProducts = [];
 
         foreach ($crosssellProductsArray as $crosssellProduct) {
@@ -105,9 +103,8 @@ class AddCrosssellDataToCartData
     public function getProductData(Product $crosssellProduct): array
     {
         $configurable = $this->getConfigurableProductFromSimple($crosssellProduct);
-
-
         $options = [];
+
         if(isset($configurable)) {
             $options =  $this->getCrosssellSimpleProductOption($configurable, $crosssellProduct->getSku());
         }
@@ -223,22 +220,24 @@ class AddCrosssellDataToCartData
      */
     public function getAddToCartButtonHtml($crosssellProduct, $configurableProduct): string
     {
+        if (!isset($configurableProduct)){
+            return '';
+        }
 
         $configurableProductData = $this->getConfigurableProductData($crosssellProduct);
         $options = $configurableProductData;
 
-
         $formKey = $this->template->getLayout()
-                                  ->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
+            ->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
 
         return $this->template->getLayout()->createBlock(Template::class)
-              ->setTemplate(self::TEMPLATE)
-              ->setData([
-                    'configurableProductId' => $configurableProduct->getId(),
-                    'options' => $options,
-                    'addToCartUrl' => $this->template->getUrl('checkout/cart/add'),
-                    'formKey' => $formKey,
-                ])->toHtml();
+            ->setTemplate(self::TEMPLATE)
+            ->setData([
+                'configurableProductId' => $configurableProduct->getId(),
+                'options' => $options,
+                'addToCartUrl' => $this->template->getUrl('checkout/cart/add'),
+                'formKey' => $formKey,
+            ])->toHtml();
     }
 
     /**
