@@ -30,7 +30,10 @@ define([
          * @returns {*}
          */
         areRelatedItems: function() {
-            return  storage.get('cart')().related_items.items.length;
+            if(!storage.get('cart')().related_items.items) {
+                return false;
+            }
+            return storage.get('cart')().related_items.items.length;
         }
     });
 });
