@@ -147,6 +147,7 @@ define([
                 arrows: false,
                 vertical: true,
                 swipe: true,
+                infinite: false,
                 verticalSwiping: true,
                 touchThreshold: 10,
                 slidesToShow: _self.data.numberSlidesTabletDesktop,
