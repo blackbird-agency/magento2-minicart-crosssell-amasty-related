@@ -130,7 +130,7 @@ class AddCrosssellDataToCartData
             'price' =>       $crosssellProduct->getData('final_price'),
             'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
             'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
-            'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable) : '',
+            'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable),
         ];
     }
 
@@ -231,7 +231,7 @@ class AddCrosssellDataToCartData
     {
         $configurableProductData = $this->getConfigurableProductData($crosssellProduct);
         $options = $configurableProductData;
-        
+
         $formKey = $this->template->getLayout()
             ->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
 
