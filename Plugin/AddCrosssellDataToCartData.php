@@ -78,10 +78,10 @@ class AddCrosssellDataToCartData
     }
 
     /**
-     * @return array
+     * @return array|null
      * @throws LocalizedException
      */
-    public function getCrossSellProductData(): array
+    public function getCrossSellProductData(): ?array
     {
         if ($this->config->isMinicartCrosssellEnable() !== '1') {
             return [];
@@ -91,22 +91,31 @@ class AddCrosssellDataToCartData
         $crosssellProducts = [];
 
         foreach ($crosssellProductsArray as $crosssellProduct) {
-            $crosssellProducts[] = $this->getProductData($crosssellProduct);
+            $crosssellProduct = $this->getProductData($crosssellProduct);
+
+            if($crosssellProduct != null)
+            {
+                $crosssellProducts[] = $crosssellProduct;
+            }
         }
 
         return $crosssellProducts;
     }
 
     /**
+     * @param Product $crosssellProduct
+     * @return array|null
      * @throws LocalizedException
      */
-    public function getProductData(Product $crosssellProduct): array
+    public function getProductData(Product $crosssellProduct): ?array
     {
         $configurable = $this->getConfigurableProductFromSimple($crosssellProduct);
-        $options = [];
 
+        $options = [];
         if(isset($configurable)) {
             $options =  $this->getCrosssellSimpleProductOption($configurable, $crosssellProduct->getSku());
+        } else {
+            return null;
         }
 
         return [
@@ -121,7 +130,7 @@ class AddCrosssellDataToCartData
             'price' =>       $crosssellProduct->getData('final_price'),
             'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
             'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
-            'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable)
+            'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable) : '',
         ];
     }
 
@@ -131,7 +140,7 @@ class AddCrosssellDataToCartData
      *
      * @return array
      */
-    public function getCrosssellSimpleProductOption(Product $configurable, string $simpleSku):array
+    public function getCrosssellSimpleProductOption(Product $configurable, string $simpleSku) :array
     {
         $crosssellProductOption = [];
         $attributes = [];
@@ -220,13 +229,9 @@ class AddCrosssellDataToCartData
      */
     public function getAddToCartButtonHtml($crosssellProduct, $configurableProduct): string
     {
-        if (!isset($configurableProduct)){
-            return '';
-        }
-
         $configurableProductData = $this->getConfigurableProductData($crosssellProduct);
         $options = $configurableProductData;
-
+        
         $formKey = $this->template->getLayout()
             ->createBlock(\Magento\Framework\View\Element\FormKey::class)->getFormKey();
 
