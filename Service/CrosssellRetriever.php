@@ -87,7 +87,12 @@ class CrosssellRetriever
 
         while (\count($productsCollection) < $maxNumberProductToDisplay && $currentGroup = $this->getCurrentGroup($entityId, $shift)) {
             $currentGroupProduct = $this->getProductsFromRules($currentGroup, $entity, $productsCollection, $entityId);
+
             foreach($currentGroupProduct as $currentProduct) {
+                if (!$currentProduct->isInStock()) {
+                    continue;
+                }
+
                 $productsCollection[] = $currentProduct->setDoNotUseCategoryId(true);
                 if(\count($productsCollection) === $maxNumberProductToDisplay) {
                     break 2;
