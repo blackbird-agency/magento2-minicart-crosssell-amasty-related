@@ -24,20 +24,25 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Blackbird\MinicartCrosssell\Api\Enum\BlockPosition;
 use Blackbird\MinicartCrosssell\Api\Enum\CrosssellProduct;
 use Blackbird\MinicartCrosssell\Model\Config;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable as ConfigurableType;
 use Magento\Quote\Model\ResourceModel\Quote\Item\CollectionFactory as QuoteItemCollectionFactory;
 
 class CrosssellRetriever
 {
     /**
      * @param GroupRepositoryInterface $groupRepositoryInterface
-     * @param ProductProvider          $productProvider
-     * @param ConfigProvider           $configProvider
-     * @param Session                  $session
-     * @param GroupRepository          $groupRepository
-     * @param Visibility               $productVisibility
-     * @param Stock                    $stockHelper
-     * @param Wrapper                  $wrapper
-     * @param Config                   $config
+     * @param ProductProvider $productProvider
+     * @param ConfigProvider $configProvider
+     * @param Session $session
+     * @param GroupRepository $groupRepository
+     * @param Visibility $productVisibility
+     * @param Stock $stockHelper
+     * @param Wrapper $wrapper
+     * @param Config $config
+     * @param QuoteItemCollectionFactory $quoteItemCollectionFactory
+     * @param ConfigurableType $configurableType
+     * @param ProductRepositoryInterface $productRepository
      */
     public function __construct(
         protected GroupRepositoryInterface $groupRepositoryInterface,
@@ -50,6 +55,8 @@ class CrosssellRetriever
         protected Wrapper $wrapper,
         protected Config $config,
         protected QuoteItemCollectionFactory $quoteItemCollectionFactory,
+        protected ConfigurableType $configurableType,
+        protected ProductRepositoryInterface $productRepository
     ) {
     }
 
@@ -90,6 +97,11 @@ class CrosssellRetriever
 
             foreach($currentGroupProduct as $currentProduct) {
                 if (!$currentProduct->isInStock()) {
+                    continue;
+                }
+
+                $configurableProduct = $this->getConfigurableProduct($currentProduct->getId());
+                if ($configurableProduct && !$configurableProduct->isInStock()) {
                     continue;
                 }
 
@@ -249,5 +261,21 @@ class CrosssellRetriever
         }
 
         $collection->setOrder(CrosssellProduct::ENTITY_ID->value, Select::SQL_ASC);
+    }
+
+    /**
+     * @param string $productId
+     * @return Product|null
+     * @throws NoSuchEntityException
+     */
+    private function getConfigurableProduct(string $productId): ?Product
+    {
+        $parentIds = $this->configurableType->getParentIdsByChild($productId);
+
+        if (!empty($parentIds)) {
+            return $this->productRepository->getById(\current($parentIds));
+        }
+
+        return null;
     }
 }
