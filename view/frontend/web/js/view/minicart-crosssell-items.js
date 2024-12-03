@@ -14,6 +14,7 @@ define([
         components: {
             cartButton: $('.action.showcart'),
             minicart: $('.block-minicart'),
+            minicartCrosssell: $('.minicart-crosssell-items')
         },
 
         selectors: {
@@ -30,13 +31,14 @@ define([
 
         events: {
             clickOnCartButton: 'click.cartButton',
-            ajaxCrosssellUpdate: 'ajax:minicartCrossellUpdated'
+            ajaxCrosssellUpdate: 'ajax:minicartCrossellUpdated',
         },
 
         data: {
             numberSlidesMobile: 1,
             numberSlidesTabletDesktop: 2,
             oldRelatedItems: '',
+            breakpoint: 1024
         },
 
         initialize: function() {
@@ -45,25 +47,14 @@ define([
 
             $(document).off(_self.events.ajaxCrosssellUpdate)
                 .on(_self.events.ajaxCrosssellUpdate, function () {
-                    _self.resetCrosssellCarrousel();
-                    _self.initCarrousel();
+                    _self.components.minicartCrosssell.slick('setPosition');
                 });
 
-            $(_self.components.cartButton).off(_self.events.clickOnCartButton)
-                .on(_self.events.clickOnCartButton, function() {
-                    _self.resetCrosssellCarrousel();
-                    const intervalInitCarrouselMobile = setInterval(function() {
-                        if(_self.components.minicart.is(_self.states.visible)) {
-                            _self.initCarrousel();
-                            clearInterval(intervalInitCarrouselMobile);
-                        }
-                    },1000);
-                })
 
             _self.updateRelatedItems();
+
             customerData.get('cart').subscribe(function() {
                 _self.updateRelatedItems(customerData.get('cart')().related_items.items);
-
             });
         },
 
@@ -138,7 +129,7 @@ define([
         initCarrousel:function() {
             const _self = this;
 
-            let minicartCrosssellCarrousel = $('.minicart-crosssell-items');
+            let minicartCrosssellCarrousel = _self.components.minicartCrosssell;
 
             minicartCrosssellCarrousel.not(_self.selectors.slickInitialized).slick({
                 accessibility: true,
@@ -153,7 +144,7 @@ define([
                 slidesToShow: _self.data.numberSlidesTabletDesktop,
                 responsive: [
                     {
-                        breakpoint: 1024,
+                        breakpoint: _self.data.breakpoint,
                         settings: {
                             swipe: true,
                             touchThreshold: 20,
@@ -175,7 +166,7 @@ define([
 
             const _self = this;
 
-            let minicartCrosssell = $('.minicart-crosssell-items');
+            let minicartCrosssell = _self.components.minicartCrosssell;
 
             minicartCrosssell.addClass(_self.classes.mobileHidden);
             minicartCrosssell.empty();

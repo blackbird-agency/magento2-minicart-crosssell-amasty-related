@@ -97,12 +97,12 @@ class CrosssellRetriever
 
             foreach($currentGroupProduct as $currentProduct) {
                 if (!$currentProduct->isInStock()) {
-                    continue;
+                    continue 2;
                 }
 
                 $configurableProduct = $this->getConfigurableProduct($currentProduct->getId());
                 if ($configurableProduct && !$configurableProduct->isInStock()) {
-                    continue;
+                    continue 2;
                 }
 
                 $productsCollection[] = $currentProduct->setDoNotUseCategoryId(true);
@@ -265,10 +265,10 @@ class CrosssellRetriever
 
     /**
      * @param string $productId
-     * @return Product|null
+     * @return ProductInterface|null
      * @throws NoSuchEntityException
      */
-    private function getConfigurableProduct(string $productId): ?Product
+    private function getConfigurableProduct(string $productId): ?ProductInterface
     {
         $parentIds = $this->configurableType->getParentIdsByChild($productId);
 
