@@ -27,23 +27,32 @@ define([
 
         states: {
             visible: ':visible',
+            isMobile: false,
         },
 
         events: {
             clickOnCartButton: 'click.cartButton',
             ajaxCrosssellUpdate: 'ajax:minicartCrossellUpdated',
+            resize: 'resize'
         },
 
         data: {
             numberSlidesMobile: 1,
             numberSlidesTabletDesktop: 2,
             oldRelatedItems: '',
-            breakpoint: 1024
+            mobileBreakpoint: 768
         },
 
         initialize: function() {
             this._super();
             const _self = this;
+
+            _self.updateIsMobile();
+
+            $(window).on(_self.events.resize, function () {
+                _self.updateIsMobile();
+                _self.components.minicartCrosssell.slick('setPosition');
+            });
 
             $(document).off(_self.events.ajaxCrosssellUpdate)
                 .on(_self.events.ajaxCrosssellUpdate, function () {
@@ -51,11 +60,31 @@ define([
                 });
 
 
+            $(_self.components.cartButton).off(_self.events.clickOnCartButton)
+                .on(_self.events.clickOnCartButton, function() {
+                    if (_self.states.isMobile) {
+                        _self.resetCrosssellCarrousel();
+                        const intervalInitCarrouselMobile = setInterval(function() {
+                            if(_self.components.minicart.is(_self.states.visible)) {
+                                _self.initCarrousel();
+                                clearInterval(intervalInitCarrouselMobile);
+                            }
+                        },1000);
+                    }
+                })
+
             _self.updateRelatedItems();
 
             customerData.get('cart').subscribe(function() {
                 _self.updateRelatedItems(customerData.get('cart')().related_items.items);
             });
+        },
+
+        updateIsMobile: function() {
+            const _self = this;
+
+            const isMobile = $(window).innerWidth() <= _self.data.mobileBreakpoint;
+            _self.states.isMobile = isMobile;
         },
 
         /**
@@ -128,8 +157,7 @@ define([
          */
         initCarrousel:function() {
             const _self = this;
-
-            let minicartCrosssellCarrousel = _self.components.minicartCrosssell;
+            const minicartCrosssellCarrousel = $('.minicart-crosssell-items');
 
             minicartCrosssellCarrousel.not(_self.selectors.slickInitialized).slick({
                 accessibility: true,
@@ -144,7 +172,7 @@ define([
                 slidesToShow: _self.data.numberSlidesTabletDesktop,
                 responsive: [
                     {
-                        breakpoint: _self.data.breakpoint,
+                        breakpoint: _self.data.mobileBreakpoint,
                         settings: {
                             swipe: true,
                             touchThreshold: 20,
@@ -163,10 +191,8 @@ define([
          * Reset Carrousel
          */
         resetCrosssellCarrousel: function() {
-
             const _self = this;
-
-            let minicartCrosssell = _self.components.minicartCrosssell;
+            const minicartCrosssell = $('.minicart-crosssell-items');
 
             minicartCrosssell.addClass(_self.classes.mobileHidden);
             minicartCrosssell.empty();
