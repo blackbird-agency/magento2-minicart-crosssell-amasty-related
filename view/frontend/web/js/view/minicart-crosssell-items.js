@@ -51,26 +51,12 @@ define([
 
             $(window).on(_self.events.resize, function () {
                 _self.updateIsMobile();
-                _self.components.minicartCrosssell.slick('setPosition');
+                _self.resetSizing();
             });
-
-            $(document).off(_self.events.ajaxCrosssellUpdate)
-                .on(_self.events.ajaxCrosssellUpdate, function () {
-                    _self.components.minicartCrosssell.slick('setPosition');
-                });
-
 
             $(_self.components.cartButton).off(_self.events.clickOnCartButton)
                 .on(_self.events.clickOnCartButton, function() {
-                    if (_self.states.isMobile) {
-                        _self.resetCrosssellCarrousel();
-                        const intervalInitCarrouselMobile = setInterval(function() {
-                            if(_self.components.minicart.is(_self.states.visible)) {
-                                _self.initCarrousel();
-                                clearInterval(intervalInitCarrouselMobile);
-                            }
-                        },1000);
-                    }
+                    _self.resetSizing();
                 })
 
             _self.updateRelatedItems();
@@ -119,7 +105,8 @@ define([
                 _self.relatedItems.removeAll();
                 _self.relatedItems(_self.previousRelatedItems());
             }
-            $(document).trigger(_self.events.ajaxCrosssellUpdate);
+            _self.resetCrosssellCarrousel();
+            _self.initCarrousel();
         },
 
         /**
@@ -150,6 +137,15 @@ define([
 
             let discount = ((oldPrice - price) / oldPrice) * 100;
             return Math.floor(discount);
+        },
+
+        /**
+         * Reset the size of the slides from carrousel
+         */
+        resetSizing: function() {
+            let minicartCrosssellCarrousel = $('.minicart-crosssell-items');
+
+            minicartCrosssellCarrousel.slick('setPosition');
         },
 
         /**
