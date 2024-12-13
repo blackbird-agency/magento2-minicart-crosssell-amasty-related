@@ -45,19 +45,20 @@ class CrosssellRetriever
      * @param ProductRepositoryInterface $productRepository
      */
     public function __construct(
-        protected GroupRepositoryInterface $groupRepositoryInterface,
-        protected ProductProvider $productProvider,
-        protected ConfigProvider $configProvider,
-        protected Session $session,
-        protected GroupRepository $groupRepository,
-        protected Visibility $productVisibility,
-        protected Stock $stockHelper,
-        protected Wrapper $wrapper,
-        protected Config $config,
+        protected GroupRepositoryInterface   $groupRepositoryInterface,
+        protected ProductProvider            $productProvider,
+        protected ConfigProvider             $configProvider,
+        protected Session                    $session,
+        protected GroupRepository            $groupRepository,
+        protected Visibility                 $productVisibility,
+        protected Stock                      $stockHelper,
+        protected Wrapper                    $wrapper,
+        protected Config                     $config,
         protected QuoteItemCollectionFactory $quoteItemCollectionFactory,
-        protected ConfigurableType $configurableType,
+        protected ConfigurableType           $configurableType,
         protected ProductRepositoryInterface $productRepository
-    ) {
+    )
+    {
     }
 
     /**
@@ -68,7 +69,7 @@ class CrosssellRetriever
     {
         $entity = $this->getLastAddedProductInCart(CrosssellProduct::PRODUCT_TYPE_SIMPLE->value);
 
-        if(!($entity)) {
+        if (!($entity)) {
             return [];
         }
 
@@ -81,35 +82,36 @@ class CrosssellRetriever
 
     /**
      * @param Product $entity
-     * @param int     $shift
+     * @param int $shift
      *
      * @return array
      * @throws NoSuchEntityException
      */
     public function getCrossSellProductCollection(Product $entity, int $shift = 0): array
     {
-        $entityId           = (int) $entity->getId();
+        $entityId = (int)$entity->getId();
         $productsCollection = [];
+        $addedProductIds    = [];
         $maxNumberProductToDisplay = $this->config->getMaxNumberProductToDisplay();
 
         while (\count($productsCollection) < $maxNumberProductToDisplay && $currentGroup = $this->getCurrentGroup($entityId, $shift)) {
-            $currentGroupProduct = $this->getProductsFromRules($currentGroup, $entity, $productsCollection, $entityId);
+            do {
+                $currentGroupProduct = $this->getProductsFromRules($currentGroup, $entity, $productsCollection, $entityId);
 
-            foreach($currentGroupProduct as $currentProduct) {
-                if (!$currentProduct->isInStock()) {
-                    continue 2;
+                foreach ($currentGroupProduct as $currentProduct) {
+                    $productId = $currentProduct->getId();
+                    if ($this->shouldSkipProductById($currentProduct, $addedProductIds)) {
+                        continue;
+                    }
+
+                    $productsCollection[] = $currentProduct->setDoNotUseCategoryId(true);
+                    $addedProductIds[]    = $productId;
+                    if (\count($productsCollection) === $maxNumberProductToDisplay) {
+                        break 2;
+                    }
                 }
 
-                $configurableProduct = $this->getConfigurableProduct($currentProduct->getId());
-                if ($configurableProduct && !$configurableProduct->isInStock()) {
-                    continue 2;
-                }
-
-                $productsCollection[] = $currentProduct->setDoNotUseCategoryId(true);
-                if(\count($productsCollection) === $maxNumberProductToDisplay) {
-                    break 2;
-                }
-            }
+            } while ($currentGroup->getMaxProducts() > 1 && \count($currentGroupProduct) > 0);
 
             if (!$this->configProvider->isEnabledSubsequentRules()) {
                 break;
@@ -119,6 +121,30 @@ class CrosssellRetriever
         }
 
         return $productsCollection;
+    }
+
+    /**
+     * @param $currentProduct
+     * @param array $addedProductIds
+     * @return bool
+     * @throws NoSuchEntityException
+     */
+    private function shouldSkipProductById($currentProduct, array $addedProductIds): bool
+    {
+        if (!$currentProduct->isInStock()) {
+            return true;
+        }
+
+        $configurableProduct = $this->getConfigurableProduct($currentProduct->getId());
+        if ($configurableProduct && !$configurableProduct->isInStock()) {
+            return true;
+        }
+
+        if (in_array($currentProduct->getId(), $addedProductIds, true)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -135,7 +161,7 @@ class CrosssellRetriever
         try {
             $productCollection = $this->productProvider->getAppliedProducts($group, $entity);
             $productCollection->setPageSize($group->getMaxProducts());
-            $productId = $entity instanceof ProductInterface ? (int) $entityId : null;
+            $productId = $entity instanceof ProductInterface ? (int)$entityId : null;
 
             return $this->prepareCollection($group, $productCollection, $productId)->load();
         } catch (NoCandidateFoundException $e) {
@@ -158,11 +184,11 @@ class CrosssellRetriever
             $collection->addOrder('created_at', 'DESC')->getItems();
 
             foreach ($collection as $item) {
-                if(($type === CrosssellProduct::PRODUCT_TYPE_CONFIGURABLE->value) && $item->getParentItemId() === null) {
+                if (($type === CrosssellProduct::PRODUCT_TYPE_CONFIGURABLE->value) && $item->getParentItemId() === null) {
                     return $item->getProduct();
                 }
 
-                if(($type === CrosssellProduct::PRODUCT_TYPE_SIMPLE->value) && $item->getParentItemId() !== null) {
+                if (($type === CrosssellProduct::PRODUCT_TYPE_SIMPLE->value) && $item->getParentItemId() !== null) {
                     return $item->getProduct();
                 }
             }
@@ -188,9 +214,9 @@ class CrosssellRetriever
     }
 
     /**
-     * @param Group      $group
+     * @param Group $group
      * @param Collection $collection
-     * @param int|null   $productId
+     * @param int|null $productId
      *
      * @return Collection
      */
