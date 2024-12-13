@@ -9,7 +9,6 @@ define([
 
     return Component.extend({
         relatedItems: ko.observableArray([]),
-        previousRelatedItems: ko.observableArray([]),
 
         components: {
             cartButton: $('.action.showcart'),
@@ -27,19 +26,16 @@ define([
 
         states: {
             visible: ':visible',
-            isMobile: false,
         },
 
         events: {
             clickOnCartButton: 'click.cartButton',
-            ajaxCrosssellUpdate: 'ajax:minicartCrossellUpdated',
             resize: 'resize'
         },
 
         data: {
             numberSlidesMobile: 1,
             numberSlidesTabletDesktop: 2,
-            oldRelatedItems: '',
             mobileBreakpoint: 768
         },
 
@@ -47,10 +43,7 @@ define([
             this._super();
             const _self = this;
 
-            _self.updateIsMobile();
-
             $(window).on(_self.events.resize, function () {
-                _self.updateIsMobile();
                 _self.resetSizing();
             });
 
@@ -59,18 +52,12 @@ define([
                     _self.resetSizing();
                 })
 
-            _self.updateRelatedItems();
-
-            customerData.get('cart').subscribe(function() {
-                _self.updateRelatedItems(customerData.get('cart')().related_items.items);
+            _self.relatedItems.subscribe(() => {
+                _self.resetCrosssellCarrousel();
+                _self.initCarrousel();
             });
-        },
 
-        updateIsMobile: function() {
-            const _self = this;
-
-            const isMobile = $(window).innerWidth() <= _self.data.mobileBreakpoint;
-            _self.states.isMobile = isMobile;
+            _self.updateRelatedItems();
         },
 
         /**
@@ -78,34 +65,17 @@ define([
          * @returns void
          */
         updateRelatedItems: function() {
-
             const _self = this;
-            let cart = customerData.get('cart');
+            const cart = customerData.get('cart');
 
-            if (cart().related_items && cart().related_items.items) {
-                let newRelatedItems = cart().related_items.items;
-                let previousItemsJSON = _self.previousRelatedItems() ?
-                    JSON.stringify(ko.toJS(_self.previousRelatedItems)) : null;
-                let newItemsJSON = JSON.stringify(newRelatedItems);
-
-                if (previousItemsJSON !== newItemsJSON) {
-                    if (newRelatedItems.length > 0) {
-                        _self.relatedItems.removeAll();
-                        _self.relatedItems(newRelatedItems);
-                        _self.previousRelatedItems(newRelatedItems);
-                    } else {
-                        _self.relatedItems.removeAll();
-                        _self.relatedItems(_self.previousRelatedItems());
-                    }
-                } else if (!newRelatedItems.length) {
-                    _self.relatedItems.removeAll();
-                    _self.relatedItems(_self.previousRelatedItems());
-                }
-            } else {
-                _self.relatedItems.removeAll();
-                _self.relatedItems(_self.previousRelatedItems());
+            if (!cart() || !cart().related_items || !cart().related_items.items) {
+                _self.relatedItems([]);
+                _self.resetCrosssellCarrousel();
+                return;
             }
-            _self.resetCrosssellCarrousel();
+
+            const newRelatedItems = cart().related_items.items || [];
+            _self.relatedItems(newRelatedItems);
             _self.initCarrousel();
         },
 
@@ -145,6 +115,7 @@ define([
         resetSizing: function() {
             let minicartCrosssellCarrousel = $('.minicart-crosssell-items');
 
+            console.log("changement taille");
             minicartCrosssellCarrousel.slick('setPosition');
         },
 
@@ -190,9 +161,12 @@ define([
             const _self = this;
             const minicartCrosssell = $('.minicart-crosssell-items');
 
-            minicartCrosssell.addClass(_self.classes.mobileHidden);
+            if (minicartCrosssell.hasClass('slick-initialized')) {
+                minicartCrosssell.slick('unslick');
+            }
+
             minicartCrosssell.empty();
-            minicartCrosssell.slick('unslick');
+            minicartCrosssell.addClass(_self.classes.mobileHidden);
         }
     });
 });
