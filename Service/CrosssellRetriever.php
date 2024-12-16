@@ -93,8 +93,15 @@ class CrosssellRetriever
         $productsCollection = [];
         $addedProductIds    = [];
         $maxNumberProductToDisplay = $this->config->getMaxNumberProductToDisplay();
+        $maxIterations = 30;
+        $iterationsCount = 0;
 
         while (\count($productsCollection) < $maxNumberProductToDisplay && $currentGroup = $this->getCurrentGroup($entityId, $shift)) {
+            if ($iterationsCount >= $maxIterations) {
+                break;
+            }
+            $iterationsCount++;
+
             do {
                 $currentGroupProduct = $this->getProductsFromRules($currentGroup, $entity, $productsCollection, $entityId);
 
