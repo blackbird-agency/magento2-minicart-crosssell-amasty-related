@@ -52,6 +52,12 @@ define([
                     _self.resetSizing();
                 })
 
+            $(document).on('ajax:addToCart', function() {
+                setTimeout(()=> {
+                    _self.updateRelatedItems();
+                }, 1000);
+            });
+
             _self.relatedItems.subscribe(() => {
                 _self.resetCrosssellCarrousel();
                 _self.initCarrousel();
