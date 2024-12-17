@@ -52,15 +52,9 @@ define([
                     _self.resetSizing();
                 })
 
-            $(document).on('ajax:addToCart', function() {
-                setTimeout(()=> {
-                    _self.updateRelatedItems();
-                }, 1000);
-            });
-
-            _self.relatedItems.subscribe(() => {
-                _self.resetCrosssellCarrousel();
-                _self.initCarrousel();
+            $(document).on('customer-data-reload', function() {
+                _self.updateRelatedItems();
+                console.log("Customer data reloaded");
             });
 
             _self.updateRelatedItems();
@@ -75,12 +69,13 @@ define([
             const cart = customerData.get('cart');
 
             if (!cart() || !cart().related_items || !cart().related_items.items) {
-                _self.relatedItems([]);
                 _self.resetCrosssellCarrousel();
+                _self.relatedItems.removeAll();
                 return;
             }
 
             const newRelatedItems = cart().related_items.items || [];
+            _self.resetCrosssellCarrousel();
             _self.relatedItems(newRelatedItems);
             _self.initCarrousel();
         },
@@ -168,10 +163,9 @@ define([
 
             if (minicartCrosssell.hasClass('slick-initialized')) {
                 minicartCrosssell.slick('unslick');
+                //minicartCrosssell.empty();
+                minicartCrosssell.addClass(_self.classes.mobileHidden);
             }
-
-            minicartCrosssell.empty();
-            minicartCrosssell.addClass(_self.classes.mobileHidden);
         }
     });
 });
