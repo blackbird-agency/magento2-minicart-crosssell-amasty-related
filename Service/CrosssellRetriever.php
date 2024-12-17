@@ -235,7 +235,8 @@ class CrosssellRetriever
             ->addFinalPrice()
             ->addTaxPercents()
             ->addUrlRewrite();
-
+        
+        $collection->addFieldToFilter('type_id', ['neq' => \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE]);
         $this->applySorting($group->getSorting(), $collection);
 
         if ($productId) {

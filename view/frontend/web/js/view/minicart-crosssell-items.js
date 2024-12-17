@@ -51,11 +51,17 @@ define([
                 .on(_self.events.clickOnCartButton, function() {
                     _self.resetSizing();
                 })
-
-            $(document).on('customer-data-reload', function() {
-                _self.updateRelatedItems();
-                console.log("Customer data reloaded");
-            });
+            
+            // Update related items after customerData.reload() finished with value loaded !
+            const originalReload = customerData.reload;
+            customerData.reload = function(...args) {
+                const result = originalReload.apply(this, args);
+                result.then((value) => {
+                    _self.updateRelatedItems();
+                    return value;
+                });
+                return result;
+            };
 
             _self.updateRelatedItems();
         },
@@ -163,7 +169,6 @@ define([
 
             if (minicartCrosssell.hasClass('slick-initialized')) {
                 minicartCrosssell.slick('unslick');
-                //minicartCrosssell.empty();
                 minicartCrosssell.addClass(_self.classes.mobileHidden);
             }
         }
