@@ -91,33 +91,37 @@ class CrosssellRetriever
     {
         $entityId = (int)$entity->getId();
         $productsCollection = [];
-        $addedProductIds    = [];
+        $addedProductIds = [];
         $maxNumberProductToDisplay = $this->config->getMaxNumberProductToDisplay();
         $maxIterations = 30;
         $iterationsCount = 0;
+        $totalMaxProductsAllowed = 0;
 
         while (\count($productsCollection) < $maxNumberProductToDisplay && $currentGroup = $this->getCurrentGroup($entityId, $shift)) {
             if ($iterationsCount >= $maxIterations) {
                 break;
             }
             $iterationsCount++;
+            $totalMaxProductsAllowed += $currentGroup->getMaxProducts();
+            $effectiveMaxProducts = min($maxNumberProductToDisplay, $totalMaxProductsAllowed);
 
             do {
                 $currentGroupProduct = $this->getProductsFromRules($currentGroup, $entity, $productsCollection, $entityId);
 
                 foreach ($currentGroupProduct as $currentProduct) {
                     $productId = $currentProduct->getId();
+
                     if ($this->shouldSkipProductById($currentProduct, $addedProductIds)) {
                         continue;
                     }
 
                     $productsCollection[] = $currentProduct->setDoNotUseCategoryId(true);
-                    $addedProductIds[]    = $productId;
-                    if (\count($productsCollection) === $maxNumberProductToDisplay) {
+                    $addedProductIds[] = $productId;
+
+                    if (\count($productsCollection) === $effectiveMaxProducts) {
                         break 2;
                     }
                 }
-
             } while ($currentGroup->getMaxProducts() > 1 && \count($currentGroupProduct) > 0);
 
             if (!$this->configProvider->isEnabledSubsequentRules()) {
@@ -235,7 +239,7 @@ class CrosssellRetriever
             ->addFinalPrice()
             ->addTaxPercents()
             ->addUrlRewrite();
-        
+
         $collection->addFieldToFilter('type_id', ['neq' => \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE]);
         $this->applySorting($group->getSorting(), $collection);
 
