@@ -1,11 +1,12 @@
 {
   "name": "blackbird/minicart-crosssell",
-  "version": "10.0.31",
+  "version": "10.0.32",
   "description": "N/A",
   "type": "magento2-module",
   "require": {
-    "magento/framework": "*",
-    "amasty/mostviewed": "^2.15"
+      "magento/framework": "*",
+      "amasty/mostviewed": "^2.15",
+      "shared-cofel/dam-media-optimizer": "^1.0"
   },
   "license": [
     "OSL-3.0"

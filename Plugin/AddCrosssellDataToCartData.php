@@ -18,6 +18,8 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\View\Element\Template;
 use PHPUnit\Exception;
 use Psr\Log\LoggerInterface;
+use SharedCofel\DamMediaOptimizer\Api\Service\MediaUrlCheckerInterface;
+use SharedCofel\DamMediaOptimizer\ViewModel\MediaOptimizer;
 
 class AddCrosssellDataToCartData
 {
@@ -26,17 +28,19 @@ class AddCrosssellDataToCartData
     const TEMPLATE = 'Blackbird_MinicartCrosssell::addToCart.phtml';
 
     /**
-     * @param CrosssellRetriever         $crossSellRetriever
-     * @param Session                    $checkoutSession
-     * @param CheckoutHelper             $checkoutHelper
+     * @param CrosssellRetriever $crossSellRetriever
+     * @param Session $checkoutSession
+     * @param CheckoutHelper $checkoutHelper
      * @param ProductRepositoryInterface $productRepository
-     * @param AttributeResource          $attributeResource
-     * @param Configurable               $configurable
-     * @param Config                     $config
-     * @param StoreManagerInterface      $storeManager
-     * @param Template                   $template
-     * @param LoggerInterface            $logger
-     * @param array                      $attributeValidators
+     * @param AttributeResource $attributeResource
+     * @param Configurable $configurable
+     * @param Config $config
+     * @param StoreManagerInterface $storeManager
+     * @param Template $template
+     * @param LoggerInterface $logger
+     * @param MediaUrlCheckerInterface $mediaUrlChecker
+     * @param MediaOptimizer $mediaOptimizer
+     * @param array $attributeValidators
      */
     public function __construct
     (
@@ -50,6 +54,8 @@ class AddCrosssellDataToCartData
         protected StoreManagerInterface $storeManager,
         protected Template $template,
         protected LoggerInterface $logger,
+        protected MediaUrlCheckerInterface $mediaUrlChecker,
+        protected MediaOptimizer$mediaOptimizer,
         protected array $attributeValidators = []
     ) {
     }
@@ -128,7 +134,12 @@ class AddCrosssellDataToCartData
             'price_html' =>       $this->checkoutHelper
                 ->formatPrice($crosssellProduct->getData('final_price')),
             'price' =>       $crosssellProduct->getData('final_price'),
-            'image' =>       $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
+            'image' =>       $this->mediaUrlChecker->isDamUrl($crosssellProduct->getData('thumbnail')) ?
+                $this->mediaOptimizer->resize(
+                    $crosssellProduct->getData('thumbnail') ?? '',
+                    700
+                )
+                : $this->getThumbnailUrl($crosssellProduct->getData('thumbnail')),
             'color' =>       $crosssellProduct->getData('code_couleur') ?? '',
             'button' =>      $this->getAddToCartButtonHtml($crosssellProduct, $configurable),
         ];
