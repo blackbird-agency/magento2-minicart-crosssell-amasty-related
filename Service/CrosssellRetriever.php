@@ -101,11 +101,18 @@ class CrosssellRetriever
             if ($iterationsCount >= $maxIterations) {
                 break;
             }
+
             $iterationsCount++;
             $totalMaxProductsAllowed += $currentGroup->getMaxProducts();
             $effectiveMaxProducts = min($maxNumberProductToDisplay, $totalMaxProductsAllowed);
+            $subIterationsCount = 0;
 
             do {
+                if ($subIterationsCount >= $maxIterations) {
+                    break;
+                }
+                $subIterationsCount++;
+
                 $currentGroupProduct = $this->getProductsFromRules($currentGroup, $entity, $productsCollection, $entityId);
 
                 foreach ($currentGroupProduct as $currentProduct) {
