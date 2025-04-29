@@ -4,6 +4,7 @@ namespace Blackbird\MinicartCrosssell\Plugin;
 
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\Product;
+use Blackbird\MinicartCrosssell\Api\Enum\CrosssellProduct;
 use Magento\Catalog\Model\ResourceModel\Eav\Attribute as AttributeResource;
 use Magento\Checkout\CustomerData\Cart;
 use Magento\Checkout\Helper\Data as CheckoutHelper;
@@ -69,7 +70,15 @@ class AddCrosssellDataToCartData
     public function afterGetSectionData(Cart $subject, $result): array
     {
         try {
+            $product = $this->crossSellRetriever->getLastAddedProductInCart(CrosssellProduct::PRODUCT_TYPE_SIMPLE->value);
+            $group = $this->crossSellRetriever->getCurrentGroup($product->getId());
+            
+            if (!$group) {
+                return $result;
+            }
+            
             $result['related_items'] = [
+                'group_id'    => $group->getGroupId(),
                 'items'       => $this->getCrossSellProductData(),
                 'title'       => $this->config->getMinicartCrosssellTitle(),
                 'max_product' => $this->config->getMaxNumberProductToDisplay()
@@ -79,7 +88,7 @@ class AddCrosssellDataToCartData
         }
         catch (\Exception $e) {
             $this->logger->error($e);
-            return [];
+            return $result;
         }
     }
 

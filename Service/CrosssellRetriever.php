@@ -31,6 +31,11 @@ use Magento\Quote\Model\ResourceModel\Quote\Item\CollectionFactory as QuoteItemC
 class CrosssellRetriever
 {
     /**
+     * @var Product[]
+     */
+    protected $lastAddedProductInCartByType = [];
+    
+    /**
      * @param GroupRepositoryInterface $groupRepositoryInterface
      * @param ProductProvider $productProvider
      * @param ConfigProvider $configProvider
@@ -67,15 +72,11 @@ class CrosssellRetriever
      */
     public function getCrossSells(): array
     {
-        $entity = $this->getLastAddedProductInCart(CrosssellProduct::PRODUCT_TYPE_SIMPLE->value);
-
-        if (!($entity)) {
-            return [];
-        }
-
         try {
+            $entity = $this->getLastAddedProductInCart(CrosssellProduct::PRODUCT_TYPE_SIMPLE->value);
+            
             return $this->getCrossSellProductCollection($entity);
-        } catch (NoSuchEntityException $e) {
+        } catch (LocalizedException $e) {
             return [];
         }
     }
@@ -188,34 +189,32 @@ class CrosssellRetriever
     }
 
     /**
-     * @param string $type
-     *
-     * @return Product|null
-     * @throws LocalizedException
+     * @throws LocalizedException|NoSuchEntityException
      */
-    public function getLastAddedProductInCart(string $type): ?Product
+    public function getLastAddedProductInCart(string $type): Product
     {
-        try {
-            $quote = $this->session->getQuote();
-            $collection = $this->quoteItemCollectionFactory->create();
-            $collection->setQuote($quote);
-            $collection->addOrder('created_at', 'DESC')->getItems();
+        if (isset($this->lastAddedProductInCartByType[$type])) {
+            return $this->lastAddedProductInCartByType[$type];
+        }
+        
+        $quote = $this->session->getQuote();
+        $collection = $this->quoteItemCollectionFactory->create();
+        $collection->setQuote($quote);
+        $collection->addOrder('created_at', 'DESC')->getItems();
 
-            foreach ($collection as $item) {
-                if (($type === CrosssellProduct::PRODUCT_TYPE_CONFIGURABLE->value) && $item->getParentItemId() === null) {
-                    return $item->getProduct();
-                }
-
-                if (($type === CrosssellProduct::PRODUCT_TYPE_SIMPLE->value) && $item->getParentItemId() !== null) {
-                    return $item->getProduct();
-                }
+        foreach ($collection as $item) {
+            if (($type === CrosssellProduct::PRODUCT_TYPE_CONFIGURABLE->value) && $item->getParentItemId() === null) {
+                $this->lastAddedProductInCartByType[$type] = $item->getProduct();
+                return $this->lastAddedProductInCartByType[$type];
             }
 
-            return null;
-
-        } catch (NoSuchEntityException $e) {
-            return null;
+            if (($type === CrosssellProduct::PRODUCT_TYPE_SIMPLE->value) && $item->getParentItemId() !== null) {
+                $this->lastAddedProductInCartByType[$type] = $item->getProduct();
+                return $this->lastAddedProductInCartByType[$type];
+            }
         }
+
+        throw new NoSuchEntityException(__('There are no last added products in cart matching crossell conditions.'));
     }
 
 
@@ -225,7 +224,7 @@ class CrosssellRetriever
      *
      * @return GroupInterface|bool
      */
-    private function getCurrentGroup(int $entityId, int $shift = 0): GroupInterface|bool
+    public function getCurrentGroup(int $entityId, int $shift = 0): GroupInterface|bool
     {
         return $this->groupRepositoryInterface->getGroupByIdAndPosition(
             $entityId, BlockPosition::MINICART->value, $shift);
