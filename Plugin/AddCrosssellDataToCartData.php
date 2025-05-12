@@ -136,7 +136,7 @@ class AddCrosssellDataToCartData
         return [
             'name' =>        $crosssellProduct->getData('name'),
             'option' =>      $options,
-            'description' => $crosssellProduct->getData('description_vignette'),
+            'description' => $crosssellProduct->getData('vignette_description'),
             'old_price_html' =>   $this->checkoutHelper
                 ->formatPrice($crosssellProduct->getData('price')),
             'old_price' =>   $crosssellProduct->getData('price'),
