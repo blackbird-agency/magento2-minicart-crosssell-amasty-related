@@ -1,6 +1,6 @@
 {
   "name": "blackbird/minicart-crosssell",
-  "version": "10.1.0",
+  "version": "10.1.1",
   "description": "N/A",
   "type": "magento2-module",
   "require": {
